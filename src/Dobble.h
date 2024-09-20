@@ -26,3 +26,8 @@ bool checkCardDeck(CardDeck& deck);
 
 CardDeck generateCardDeck(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics);
 
+
+#ifdef DEBUG
+void print(const Card& card);
+void println(const Card& card);
+#endif
