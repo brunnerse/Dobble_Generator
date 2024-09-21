@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     CardDeckMetrics metrics;
     CardDeck deck = generateCardDeck(nSymbolsPerCard, &metrics);
 
-    if (deck.size() == 0){
+    if (deck.empty()){
         printf("Failed to generate card deck with %u symbols per card.\n", 
             nSymbolsPerCard);
         return 1;
@@ -51,9 +51,9 @@ int main(int argc, char *argv[])
     // Print card deck with symbols
     printf("\nCard Deck:\n");
     for (uint32_t i = 0; i < deck.size(); i++) {
-        printf("[%2u]\t", i);
+        printf("Card No. %2u:\t", i+1);
         for (SymbolId id : deck[i]) {
-            printf("%15s", i, symbols[id].str);
+            printf("%12s[%02x]", symbols[id].str, symbols[id].id);
         }
         printf("\n");
     }

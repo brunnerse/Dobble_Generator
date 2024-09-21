@@ -30,62 +30,67 @@ bool has_no_duplicate_symbols(Card& c)
     return true;
 }
 
-bool has_exactly_one_common_symbol(Card& c1, Card& c2) 
+uint32_t num_common_symbols(Card& c1, Card& c2, bool fast=true) 
 {
-    bool success = false;
+    uint32_t common = 0;
     for (SymbolId sym : c1) {
         for (SymbolId sym2 : c2) {
             if (sym == sym2) {
-                if (!success) {
-                    success = true;
-                } else {
+                common++;
+                if (fast && common > 1) {
+#if DEBUG
                     printf("Failed during check: Cards do have more than one common symbol\nThe cards are:");
                     print(c1); printf(","); println(c2);
-                    return false;
+#endif
+                    return common;
                 }
             }
         }
     }
 
 #if DEBUG
-    if (!success) {
+    if (common == 0) {
         printf("Failed during check: Cards do not have a common symbol\nThe cards are:");
         print(c1); printf(","); println(c2);
     }
 #endif
 
-    return success;
+    return common;
 }
 
 
+bool checkCardAgainstDeck(Card& card, const CardDeck::iterator& begin, const CardDeck::iterator& end) 
+{
+    for (auto iter = begin; iter != end; iter++) {
+        Card& card_to_compare = *iter;
+        // Do not compare card with itself (TODO: check not always necessary)
+        if (card_to_compare == card)
+            continue;
+        if (num_common_symbols(card, card_to_compare) != 1) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool checkCardDeck(CardDeck& deck)
 {
-    for (auto iter = deck.rbegin(); iter != deck.rend(); iter++)
+    for (auto iter = deck.begin(); iter != deck.end(); iter++)
     {
         Card& card = *iter;
 
         if (!has_no_duplicate_symbols(card))
             return false;
 
-
 #if EXHAUSTIVE_CHECK
         // Check all elements
-        for (auto iter2 = deck.rbegin(); iter2 != deck.rend(); iter2++)
+        if (!checkCardAgainstDeck(card, deck.begin(), deck.end()))
+            return false;
 #else
-        // Only check elements lower than current one, as all above have already been checked
-        for (auto iter2 = iter+1; iter2 != deck.rend(); iter2++)
+        // Only check elements higher than the current one, as all below have already been checked
+        if (!checkCardAgainstDeck(card, iter+1, deck.end()))
+            return false;
 #endif
-        {
-            Card& card_to_compare = *iter2;
-#if EXHAUSTIVE_CHECK
-            // Do not compare card with itself
-            if (card_to_compare == card)
-                continue;
-#endif
-            if (!has_exactly_one_common_symbol(card, card_to_compare)) {
-                return false;
-            }
-        }
     }
     return true;
 }

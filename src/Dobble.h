@@ -22,6 +22,8 @@ struct CardDeckMetrics {
     uint32_t Num_Symbols;
 };
 
+uint32_t num_common_symbols(Card& c1, Card& c2, bool fast=true); 
+bool checkCardAgainstDeck(Card& card, const CardDeck::iterator& begin, const CardDeck::iterator& end);
 bool checkCardDeck(CardDeck& deck);
 
 CardDeck generateCardDeck(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics);
