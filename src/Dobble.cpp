@@ -20,8 +20,8 @@ bool has_no_duplicate_symbols(const Card& c)
         for (auto iter2 = iter+1; iter2 != c.end(); iter2++) {
             if (*iter == *iter2) {
 #if DEBUG
-                printf("Failed during check: Card has duplicate symbol with id %2x. Card is", *iter); 
-                println(c);
+//                printf("Failed during check: Card has duplicate symbol with id %2x. Card is", *iter); 
+//                println(c);
 #endif
                 return false;
             }
@@ -39,8 +39,8 @@ uint32_t countCommonSymbols(const Card& c1, const Card& c2, bool fast)
                 common++;
                 if (fast && common > 1) {
 #if DEBUG
-                    printf("Failed during check: Cards do have more than one common symbol\nThe cards are:");
-                    print(c1); printf(" and "); println(c2);
+//                    printf("Failed during check: Cards do have more than one common symbol\nThe cards are:");
+//                    print(c1); printf(" and "); println(c2);
 #endif
                     return common;
                 }
@@ -50,26 +50,34 @@ uint32_t countCommonSymbols(const Card& c1, const Card& c2, bool fast)
 
 #if DEBUG
     if (common == 0) {
-        printf("Failed during check: Cards do not have a common symbol\nThe cards are:");
-        print(c1); printf(","); println(c2);
-    }
+//     printf("Failed during check: Cards do not have a common symbol\nThe cards are:");
+//     print(c1); printf(","); println(c2);
+ } else {
+//   printf("Passed check: Cards do have exactly one common symbol\nThe cards are:");
+//    print(c1); printf(" and "); println(c2);
+ }
 #endif
 
     return common;
 }
 
 
-bool checkCardAgainstDeck(const Card& card, const CardDeck::iterator& begin, const CardDeck::iterator& end, const Card* skipCard) 
+bool checkCardAgainstDeck(const Card& card, const CardDeck::iterator& begin, const CardDeck::iterator& end, const Card* skipCard, bool failure_only_duplicate_symbols) 
 {
     for (auto iter = begin; iter != end; iter++) {
         Card& card_to_compare = *iter;
         // Do not compare card with itself (TODO: check not always necessary)
-        if (card_to_compare == card || &card_to_compare == skipCard)
+        if (&card_to_compare == &card || &card_to_compare == skipCard)
             continue;
-        if (countCommonSymbols(card, card_to_compare) != 1) {
-            return false;
+        uint32_t num_common = countCommonSymbols(card, card_to_compare);
+        if (failure_only_duplicate_symbols) {
+            if (num_common > 1)
+                return false;
+        } else {
+            if (num_common != 1)
+                return false;
         }
-    }
+    }        
     return true;
 }
 

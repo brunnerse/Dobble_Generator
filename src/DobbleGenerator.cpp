@@ -63,22 +63,29 @@ CardDeck generateCardDeck(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
         last_base_symbol_idx = next_base_symbol_idx;
         
 #if DEBUG
-        printf("Selected symbol idx base[%zx] = %2x as start\n", next_base_symbol_idx, base[next_base_symbol_idx]);
+        printf("Selected symbol base[%zx] = %2x as start\n", next_base_symbol_idx, base[next_base_symbol_idx]);
 #endif
 
-        
         Card card;
         card.reserve(nSymbolsPerCard);
-
         card.push_back(base[next_base_symbol_idx]); 
 
         bool isNewCardValid = true;
 
         for (CardDeck::iterator next_card_to_match = deck.begin()+1; next_card_to_match != deck.end(); next_card_to_match++) 
         {
+    #if DEBUG
+                  printf("[card %td: ", next_card_to_match-deck.begin()+1);
+    //            printf("\t Testing to match with card ");  print(*next_card_to_match); printf("\tusing symbol %2x\n", card[test_symbol_idx]);
+    #endif
             uint32_t num_common_symbs = countCommonSymbols(card, *next_card_to_match);
             if (num_common_symbs == 1) // Already correctly matching with next_card_to_match, continue with next card 
+            {
+    #if DEBUG
+                printf("already matching] ");
+    #endif
                 continue;
+            }
             else if (num_common_symbs > 1) {
                 printf("ERROR: New card already has more than one common symbol with another card, this must never happen\n");
                 return CardDeck();
@@ -86,16 +93,18 @@ CardDeck generateCardDeck(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
 
             // No common symbols: test symbols from card 
             bool success = false;
-            for (size_t test_symbol_idx = 1; test_symbol_idx < nSymbolsPerCard; test_symbol_idx++) {
+            for (size_t test_symbol_idx = 1; test_symbol_idx < nSymbolsPerCard; test_symbol_idx++) 
+            {
                 // Try symbol to match with next_card_to_match 
                 card.push_back((*next_card_to_match)[test_symbol_idx]);
     #if DEBUG
-                printf("[card %td]\t", next_card_to_match-deck.begin());
-    //            printf("\t Testing to match with card ");  print(*next_card_to_match); printf("\tusing symbol %2x\n", card[test_symbol_idx]);
+                    printf("test symbol %2x  ", card.back()); 
     #endif
-
                 // Check card against entire deck (except the base card) 
-                if (checkCardAgainstDeck(card, deck.begin()+1, deck.end())) { //TODO can exclude next_card_to_match from check
+                if (checkCardAgainstDeck(card, deck.begin()+1, deck.end(), nullptr, true)) { //TODO can exclude next_card_to_match from check
+    #if DEBUG
+                    printf("match with symbol %2x]", card.back()); 
+    #endif
                     success = true;
                     break;
                 } else {
@@ -107,7 +116,7 @@ CardDeck generateCardDeck(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
             if (!success) {
                 // If cannot create any more cards starting with current symbol, mark symbol as invalid and restart 
 #if DEBUG
-                printf("Exhausted all options with start symbol %2x, marking as invalid\n", 
+                printf("no match possible] -> Exhausted all options with start symbol %2x, marking as invalid\n", 
                     base[next_base_symbol_idx]);
 #endif
                 base_symbol_valid[last_base_symbol_idx] = false;
@@ -120,7 +129,7 @@ CardDeck generateCardDeck(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
         {
 #if DEBUG
             if (card.size() < nSymbolsPerCard)
-                printf("\t Matched with all cards, filling remaining symbols with new ones %2x, ...\n", highest_sym_id+1);
+                printf("\t filling remaining symbols with new ones ...");
 #endif
             // Fill remaining symbols with new ones
             while (card.size() < nSymbolsPerCard)
@@ -129,7 +138,7 @@ CardDeck generateCardDeck(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
             // Insert completed card into deck
             deck.push_back(card);
 #if DEBUG
-            printf("=> New Card (No. %zu):", deck.size()); println(deck.back()); 
+            printf("\n=> New Card (No. %zu):", deck.size()); println(deck.back()); 
 #endif
         }
     } 

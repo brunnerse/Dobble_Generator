@@ -38,6 +38,8 @@ int main(int argc, char *argv[])
     if (!isCorrect) {
         printf("Failed: Generated card deck is not correct\n");
         return 1;
+    } else {
+        printf("Success: Generated card deck is correct\n");
     }
 
 
@@ -53,7 +55,8 @@ int main(int argc, char *argv[])
     for (uint32_t i = 0; i < deck.size(); i++) {
         printf("Card No. %2u:\t", i+1);
         for (SymbolId id : deck[i]) {
-            printf("%12s[%02x]", symbols[id].str, symbols[id].id);
+//            printf("%12s[%01x]", symbols[id].str, symbols[id].id);
+            printf("%4x", symbols[id].id);
         }
         printf("\n");
     }
