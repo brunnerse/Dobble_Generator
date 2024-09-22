@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
             argv[0]);
         return 0;
     }
-    uint32_t nSymbolsPerCard = strtol(argv[1], NULL, 10);
+    uint32_t nSymbolsPerCard = (uint32_t)strtol(argv[1], NULL, 10);
 
     // TODO output file in args?
     // TODO input symbol file in args?

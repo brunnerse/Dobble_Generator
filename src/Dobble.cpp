@@ -14,7 +14,7 @@ void println(const Card& card) {
 }
 #endif
 
-bool has_no_duplicate_symbols(Card& c) 
+bool has_no_duplicate_symbols(const Card& c) 
 {
     for (auto iter = c.begin(); iter != c.end(); iter++) {
         for (auto iter2 = iter+1; iter2 != c.end(); iter2++) {
@@ -30,7 +30,7 @@ bool has_no_duplicate_symbols(Card& c)
     return true;
 }
 
-uint32_t num_common_symbols(Card& c1, Card& c2, bool fast=true) 
+uint32_t countCommonSymbols(const Card& c1, const Card& c2, bool fast) 
 {
     uint32_t common = 0;
     for (SymbolId sym : c1) {
@@ -40,7 +40,7 @@ uint32_t num_common_symbols(Card& c1, Card& c2, bool fast=true)
                 if (fast && common > 1) {
 #if DEBUG
                     printf("Failed during check: Cards do have more than one common symbol\nThe cards are:");
-                    print(c1); printf(","); println(c2);
+                    print(c1); printf(" and "); println(c2);
 #endif
                     return common;
                 }
@@ -59,14 +59,14 @@ uint32_t num_common_symbols(Card& c1, Card& c2, bool fast=true)
 }
 
 
-bool checkCardAgainstDeck(Card& card, const CardDeck::iterator& begin, const CardDeck::iterator& end) 
+bool checkCardAgainstDeck(const Card& card, const CardDeck::iterator& begin, const CardDeck::iterator& end, const Card* skipCard) 
 {
     for (auto iter = begin; iter != end; iter++) {
         Card& card_to_compare = *iter;
         // Do not compare card with itself (TODO: check not always necessary)
-        if (card_to_compare == card)
+        if (card_to_compare == card || &card_to_compare == skipCard)
             continue;
-        if (num_common_symbols(card, card_to_compare) != 1) {
+        if (countCommonSymbols(card, card_to_compare) != 1) {
             return false;
         }
     }
@@ -77,7 +77,7 @@ bool checkCardDeck(CardDeck& deck)
 {
     for (auto iter = deck.begin(); iter != deck.end(); iter++)
     {
-        Card& card = *iter;
+        const Card& card = *iter;
 
         if (!has_no_duplicate_symbols(card))
             return false;
