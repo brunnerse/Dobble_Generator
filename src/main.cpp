@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 
 
     CardDeckMetrics metrics;
-    CardDeck deck = generateCardDeck(nSymbolsPerCard, &metrics, GeneratorMethod::FILLUP);
+    CardDeck deck = generateCardDeck(nSymbolsPerCard, &metrics, GeneratorMethod::CHECK_ALL_PERMUTATIONS);
 
     if (deck.empty()){
         printf("Failed to generate card deck with %u symbols per card.\n", 

@@ -22,6 +22,7 @@ struct CardDeckMetrics {
     uint32_t Num_Symbols;
 };
 
+bool has_no_duplicate_symbols(const Card& c);
 uint32_t countCommonSymbols(const Card& c1, const Card& c2, bool fast=true); 
 bool checkCardAgainstDeck(const Card& card, const CardDeck::iterator& begin, const CardDeck::iterator& end,
      const Card* skipCard=nullptr, bool failure_only_duplicate_symbols=false); 
