@@ -2,6 +2,8 @@
 #include <iterator>
 #include <numeric>
 
+#include <assert.h>
+
 #include "Dobble.h"
 
 
@@ -54,8 +56,8 @@ CardDeck generateByFillup(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
 #endif
     for (unsigned i = 1; i < nSymbolsPerCard; i++) {
         Card& card = deck[i];
-        std::iota(card.begin()+1, card.end(), highestSymbol+1);
-        highestSymbol = card.back();
+        while (card.size() < nSymbolsPerCard)
+            card.push_back(++highestSymbol);
     }
 
 #if DEBUG
@@ -72,6 +74,63 @@ CardDeck generateByFillup(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
         printf("\n");
     }
 #endif
+
+    // Now we need to fill up the remaining cards until all numbers are correct
+    // First: Fill second symbol for remaining cards with numbers of first card
+    /*
+    Card &second_card = deck[1];
+    unsigned symbolIdx = 1;
+    // Go through all possible permutations of the numbers of cards 
+    for (auto card = deck.begin() + nSymbolsPerCard; card != deck.end(); card++)
+    {
+        card->push_back(second_card[symbolIdx]);
+        symbolIdx = (symbolIdx < nSymbolsPerCard-1) ? symbolIdx+1 : 1;
+    }
+    */
+
+    std::vector<uint32_t> perm_idx(nSymbolsPerCard - 1, 1);
+    CardDeck::iterator next_card_to_fill = deck.begin() + nSymbolsPerCard;
+    while (next_card_to_fill != deck.end()) 
+    {
+        std::vector<SymbolId> symbol_permutation(nSymbolsPerCard-1);
+        for (unsigned i = 0; i < symbol_permutation.size(); i++)
+            symbol_permutation[i] = deck[1+i][perm_idx[i]];
+
+        // Check to which card we can insert the permutation
+        for (auto iter_card = next_card_to_fill; iter_card != deck.end(); iter_card++) 
+        {
+            // If card is already full: Skip
+            if (iter_card->size() == nSymbolsPerCard)
+                continue;
+
+            iter_card->insert(iter_card->end(), symbol_permutation.begin(), symbol_permutation.end());
+            assert(iter_card->size() == nSymbolsPerCard);
+
+            if (checkCardAgainstDeck(*iter_card, deck.begin(), deck.end(), nullptr, true)) {
+                // Success: Filled out another card
+#if DEBUG
+                printf("\n=> Finished another Card: "); println(*iter_card); 
+#endif
+                // Go to next card that is not full yet 
+                while (next_card_to_fill->size() == nSymbolsPerCard && next_card_to_fill != deck.end())
+                    next_card_to_fill++;
+                break;
+            } else {
+                // No Success: Remove symbols from card again
+                iter_card->resize(iter_card->size() - symbol_permutation.size());
+            }
+        }
+
+        // Select next permutation
+        for (auto iter_idx = perm_idx.rbegin(); iter_idx != perm_idx.rend(); iter_idx++) {
+            if (*iter_idx == nSymbolsPerCard-1) {
+                *iter_idx = 1;
+            } else {
+                *iter_idx += 1;
+                break;
+            }
+        }
+    }
 
 
 

@@ -86,7 +86,7 @@ bool checkCardAgainstDeck(const Card& card, const CardDeck::iterator& begin, con
 
 bool validateCardDeck(CardDeck& deck)
 {
-    auto nSymbolsPerCard = deck.begin()->size();
+    auto nSymbolsPerCard = deck.front().size();
     for (auto iter = deck.begin(); iter != deck.end(); iter++)
     {
         const Card& card = *iter;
@@ -106,4 +106,37 @@ bool validateCardDeck(CardDeck& deck)
 #endif
     }
     return true;
+}
+
+
+void printCardDeckAnalysis(CardDeck& deck)
+{   
+    auto nSymbolsPerCard = deck.front().size();
+
+    printf("\nCard Deck Analysis:\n");
+
+    for (uint32_t i = 0; i < deck.size(); i++) {
+        printf("Card No. %2u:\t", i+1);
+        Card &card = deck[i];
+        for (SymbolId id : card) {
+            printf("%4x", id);
+        }
+        printf("\t");
+        if (!has_no_duplicate_symbols(card))
+            printf("[Duplicate symbols]\t");
+        if (card.size() != nSymbolsPerCard)
+            printf("[Wrong number of symbols]\t");
+
+        for (uint32_t x = 0; x < i; x++) {
+            Card& card_to_compare = deck[x];
+            // Do not compare card with itself (TODO: check not always necessary)
+            if (card_to_compare == card)
+                continue;
+            uint32_t num_common = countCommonSymbols(card, card_to_compare);
+            if (num_common != 1) {
+                printf("\n\t\t\t Error: Has %u common symbols with card No. %2u", num_common, i);
+            }
+        }        
+        printf("\n");
+    }
 }

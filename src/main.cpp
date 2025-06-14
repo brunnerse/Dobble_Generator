@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
     bool isCorrect = validateCardDeck(deck);
     if (!isCorrect) {
         printf("Failed: Generated card deck is not correct\n");
+        printCardDeckAnalysis(deck);
         return 1;
     } else {
         printf("Success: Generated card deck is correct\n");
@@ -70,3 +71,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+

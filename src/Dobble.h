@@ -28,6 +28,9 @@ bool checkCardAgainstDeck(const Card& card, const CardDeck::iterator& begin, con
 bool validateCardDeck(CardDeck& deck);
 
 
+void printCardDeckAnalysis(CardDeck& deck);
+
+
 #ifdef DEBUG
 void print(const Card& card);
 void println(const Card& card);
