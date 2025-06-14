@@ -1,5 +1,7 @@
 #include <vector>
 #include <iterator>
+#include <numeric>
+
 
 #include "Dobble.h"
 
@@ -10,30 +12,31 @@
 #include <stddef.h>
 
 
+namespace DobbleGenerator {
 
-CardDeck generateCardDeck(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics) 
+CardDeck generateIteratively(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics) 
 {
     CardDeck deck; 
 
-    if (nSymbolsPerCard < 2)
+    if (nSymbolsPerCard < 1)
         return deck; 
 
     // Expected number of cards according to DorFuchs
     deck.reserve(nSymbolsPerCard * (nSymbolsPerCard-1) + 1);
 
-    // Put base card into the deck and initialize it
+    // Put base card into the deck and initialize it : 0 1 2 3 ... nSymbolsPerCard-1
     Card base(nSymbolsPerCard);
-    for (uint32_t i = 0;  i < base.size(); i++) {
-        base[i] = i; 
-    }
+    std::iota(base.begin(), base.end(), 0);
     deck.push_back(base);
 
 #if DEBUG
     printf("=> Base Card (No. 1):"); println(base);
 #endif
 
+    // Does what?
     std::vector<bool> base_symbol_valid(nSymbolsPerCard, true); 
-    uint32_t highest_sym_id = base.back();
+    // Gives the number corresponding to the highest current symbol
+    uint32_t highest_symbol = base.back();
     size_t last_base_symbol_idx = base.size()-1;
 
     while (deck.size() < 10) //TODO remove 
@@ -127,13 +130,14 @@ CardDeck generateCardDeck(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
 
         if (isNewCardValid) 
         {
+            // Card is now matching with all previous cards; if card does not have all symbols yet, fill it up with new symbols
 #if DEBUG
             if (card.size() < nSymbolsPerCard)
                 printf("\t filling remaining symbols with new ones ...");
 #endif
             // Fill remaining symbols with new ones
             while (card.size() < nSymbolsPerCard)
-                    card.push_back(++highest_sym_id); 
+                    card.push_back(++highest_symbol); 
 
             // Insert completed card into deck
             deck.push_back(card);
@@ -145,10 +149,13 @@ CardDeck generateCardDeck(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
 
     out_metrics->Num_Cards = (uint32_t)deck.size();
     out_metrics->Num_Symbols_per_Card = nSymbolsPerCard;
-    out_metrics->Num_Symbols = highest_sym_id + 1;
+    out_metrics->Num_Symbols = highest_symbol + 1;
 
     return deck;
 }
+
+}
+
 
 
 

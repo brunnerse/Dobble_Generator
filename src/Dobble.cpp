@@ -3,6 +3,9 @@
 #define EXHAUSTIVE_CHECK 1
 
 #ifdef DEBUG
+
+#include <stdio.h>
+
 void print(const Card& card) {
     for (uint32_t symbol_id : card) {
         printf("%4x", symbol_id);
@@ -81,13 +84,15 @@ bool checkCardAgainstDeck(const Card& card, const CardDeck::iterator& begin, con
     return true;
 }
 
-bool checkCardDeck(CardDeck& deck)
+bool validateCardDeck(CardDeck& deck)
 {
+    auto nSymbolsPerCard = deck.begin()->size();
     for (auto iter = deck.begin(); iter != deck.end(); iter++)
     {
         const Card& card = *iter;
 
-        if (!has_no_duplicate_symbols(card))
+        // Check that card has right number of symbols and no duplicate symbols
+        if (!(card.size() == nSymbolsPerCard && has_no_duplicate_symbols(card)))
             return false;
 
 #if EXHAUSTIVE_CHECK
