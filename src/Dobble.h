@@ -2,12 +2,11 @@
 #include <stdint.h>
 #include <vector>
 
+#include <string>
 
 typedef uint32_t SymbolId;
 
-struct Symbol {
-    const char *str;
-};
+typedef std::string Symbol;
 
 // A card is holding a number of symbols given by their id
 typedef std::vector<SymbolId> Card;
