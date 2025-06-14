@@ -12,6 +12,10 @@
 #endif
 #include <stddef.h>
 
+
+#define FILL_SECOND_SYMBOL 1
+
+
 namespace DobbleGenerator {
 
 
@@ -74,10 +78,18 @@ CardDeck generateByFillup(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
         printf("\n");
     }
 #endif
+    // We now created all cards and symbols: Can calculate the metrics 
+
+    out_metrics->Num_Cards = (uint32_t)deck.size();
+    out_metrics->Num_Symbols_per_Card = nSymbolsPerCard;
+    out_metrics->Num_Symbols = highestSymbol + 1;
+
 
     // Now we need to fill up the remaining cards until all numbers are correct
+#if FILL_SECOND_SYMBOL
+    if (nSymbolsPerCard < 2)
+        return deck;
     // First: Fill second symbol for remaining cards with numbers of first card
-    /*
     Card &second_card = deck[1];
     unsigned symbolIdx = 1;
     // Go through all possible permutations of the numbers of cards 
@@ -86,15 +98,25 @@ CardDeck generateByFillup(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
         card->push_back(second_card[symbolIdx]);
         symbolIdx = (symbolIdx < nSymbolsPerCard-1) ? symbolIdx+1 : 1;
     }
-    */
 
-    std::vector<uint32_t> perm_idx(nSymbolsPerCard - 1, 1);
+    uint32_t deck_start_idx = 2;
+    uint32_t remaining_symbols_per_card = nSymbolsPerCard - 2;
     CardDeck::iterator next_card_to_fill = deck.begin() + nSymbolsPerCard;
+    while (next_card_to_fill->size() == nSymbolsPerCard && next_card_to_fill != deck.end())
+        next_card_to_fill++;
+    std::vector<uint32_t> perm_idx(nSymbolsPerCard - 2, 1);
+#else
+    uint32_t deck_start_idx = 1;
+    uint32_t remaining_symbols_per_card = nSymbolsPerCard - 1;
+    CardDeck::iterator next_card_to_fill = deck.begin() + nSymbolsPerCard;
+    std::vector<uint32_t> perm_idx(nSymbolsPerCard - 1, 1);
+#endif
+
     while (next_card_to_fill != deck.end()) 
     {
-        std::vector<SymbolId> symbol_permutation(nSymbolsPerCard-1);
+        std::vector<SymbolId> symbol_permutation(remaining_symbols_per_card);
         for (unsigned i = 0; i < symbol_permutation.size(); i++)
-            symbol_permutation[i] = deck[1+i][perm_idx[i]];
+            symbol_permutation[i] = deck[deck_start_idx + i][perm_idx[i]];
 
         // Check to which card we can insert the permutation
         for (auto iter_card = next_card_to_fill; iter_card != deck.end(); iter_card++) 
@@ -131,13 +153,6 @@ CardDeck generateByFillup(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
             }
         }
     }
-
-
-
-    out_metrics->Num_Cards = (uint32_t)deck.size();
-    out_metrics->Num_Symbols_per_Card = nSymbolsPerCard;
-    out_metrics->Num_Symbols = highestSymbol + 1;
-
     return deck;
 }
 

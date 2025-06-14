@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
             metrics.Num_Symbols_per_Card, metrics.Num_Cards, metrics.Num_Symbols);
             
     printf("\t(Expected for %u symbols per card: %u cards and %u symbols\n",
-            nSymbolsPerCard, nSymbolsPerCard * (nSymbolsPerCard-1) + 1, 00);
+            nSymbolsPerCard, nSymbolsPerCard * (nSymbolsPerCard-1) + 1, nSymbolsPerCard * (nSymbolsPerCard-1)+1);
 
     printf("Checking correctness of card deck...\n");
 

@@ -10,7 +10,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceRoot}/build/generator",
-            "args": ["3"],
+            "args": ["2"],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [],

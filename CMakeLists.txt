@@ -23,6 +23,7 @@ add_library(dobble
 	src/Dobble.cpp  
 	src/Generator/IterativeGenerator.cpp
 	src/Generator/FillupGenerator.cpp
+	src/Generator/PermutationGenerator.cpp
 )
 
 target_include_directories(dobble PUBLIC
