@@ -65,7 +65,7 @@ CardDeck generateByFillup(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics
     }
 
 #if DEBUG
-    printf("We now have %lu cards and %u symbols\n",
+    printf("We now have %lu cards and %u symbols => no more new cards or symbols\n",
             deck.size(), highestSymbol+1);
     // Print card deck with symbols
     printf("\nCard Deck:\n");

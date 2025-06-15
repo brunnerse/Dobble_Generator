@@ -1,7 +1,10 @@
 #include <vector>
 #include <iterator>
 #include <numeric>
+#include <algorithm>
+#include <map>
 
+#include <assert.h>
 
 #include "Dobble.h"
 
@@ -16,140 +19,127 @@ namespace DobbleGenerator {
 
 CardDeck generateIteratively(uint32_t nSymbolsPerCard, CardDeckMetrics *out_metrics) 
 {
-    CardDeck deck; 
-
-    if (nSymbolsPerCard < 1)
-        return deck; 
+    if (nSymbolsPerCard <= 1)
+        return CardDeck(nSymbolsPerCard, Card(nSymbolsPerCard, 0));
 
     // Expected number of cards according to DorFuchs
+    CardDeck deck; 
     deck.reserve(nSymbolsPerCard * (nSymbolsPerCard-1) + 1);
 
-    // Put base card into the deck and initialize it : 0 1 2 3 ... nSymbolsPerCard-1
-    Card base(nSymbolsPerCard);
-    std::iota(base.begin(), base.end(), 0);
-    deck.push_back(base);
-
-#if DEBUG
-    printf("=> Base Card (No. 1):"); println(base);
-#endif
-
-    // Does what?
-    std::vector<bool> base_symbol_valid(nSymbolsPerCard, true); 
+    std::vector<uint32_t> symbol_match_count(0, 0); 
+    int32_t highest_symbol = -1;
     // Gives the number corresponding to the highest current symbol
-    uint32_t highest_symbol = base.back();
-    size_t last_base_symbol_idx = base.size()-1;
 
-    while (deck.size() < 10) //TODO remove 
+    bool is_last_created_card_valid = true;
+
+    while (is_last_created_card_valid && deck.size() < 10)
     { 
 #if DEBUG
         printf("\n==========\nTrying to create card No. %zu...\n", deck.size()+1);
-        printf("\nBase symbols valid:\n");
-        for (uint32_t sym : base)
+        printf("\nBase symbols match count:\n");
+        for (SymbolId sym = 0; sym < symbol_match_count.size(); sym++)
             printf("%6x", sym);
         printf("\n");
-        for (bool sym_valid : base_symbol_valid)
-            printf("%6c", sym_valid ? 'y' : 'x');
+        for (uint32_t sym_count : symbol_match_count)
+            printf("%6u", sym_count); 
         printf("\n\n");
-#endif
-
-
-        // Check all symbols of base via round robin if base_symbol_valid is true
-        size_t next_base_symbol_idx = last_base_symbol_idx;
-        do {
-            next_base_symbol_idx = (next_base_symbol_idx + 1) % base.size();
-        } while (!base_symbol_valid[next_base_symbol_idx] && last_base_symbol_idx != next_base_symbol_idx);
-
-        // Check if found a valid next base symbol; otherwise all base_symbol_valid must be false and we are done 
-        if (!base_symbol_valid[next_base_symbol_idx])
-            break;
-
-        last_base_symbol_idx = next_base_symbol_idx;
-        
-#if DEBUG
-        printf("Selected symbol base[%zx] = %2x as start\n", next_base_symbol_idx, base[next_base_symbol_idx]);
 #endif
 
         Card card;
         card.reserve(nSymbolsPerCard);
-        card.push_back(base[next_base_symbol_idx]); 
 
-        bool isNewCardValid = true;
-
-        for (CardDeck::iterator next_card_to_match = deck.begin()+1; next_card_to_match != deck.end(); next_card_to_match++) 
+        for (Card next_card_to_match : deck) 
         {
     #if DEBUG
-                  printf("[card %td: ", next_card_to_match-deck.begin()+1);
-    //            printf("\t Testing to match with card ");  print(*next_card_to_match); printf("\tusing symbol %2x\n", card[test_symbol_idx]);
+                printf("\tTesting to match with card ");  println(next_card_to_match); 
     #endif
-            uint32_t num_common_symbs = countCommonSymbols(card, *next_card_to_match);
+
+            uint32_t num_common_symbs = countCommonSymbols(card, next_card_to_match);
             if (num_common_symbs == 1) // Already correctly matching with next_card_to_match, continue with next card 
             {
     #if DEBUG
-                printf("already matching] ");
+                printf("\t---- already matching\n");
     #endif
                 continue;
             }
             else if (num_common_symbs > 1) {
-                printf("ERROR: New card already has more than one common symbol with another card, this must never happen\n");
-                return CardDeck();
+                printf("\tERROR: New card already has more than one common symbol with another card, this must never happen\n");
+                return deck;
             }
 
-            // No common symbols: test symbols from card 
-            bool success = false;
-            for (size_t test_symbol_idx = 1; test_symbol_idx < nSymbolsPerCard; test_symbol_idx++) 
-            {
-                // Try symbol to match with next_card_to_match 
-                card.push_back((*next_card_to_match)[test_symbol_idx]);
-    #if DEBUG
-                    printf("test symbol %2x  ", card.back()); 
-    #endif
-                // Check card against entire deck (except the base card) 
-                if (checkCardAgainstDeck(card, deck.begin()+1, deck.end(), nullptr, true)) { //TODO can exclude next_card_to_match from check
-    #if DEBUG
-                    printf("match with symbol %2x]", card.back()); 
-    #endif
-                    success = true;
-                    break;
-                } else {
-                    card.pop_back(); // Remove tested symbol again
-                } 
-            }
+            // Sort symbols of card_to_match  by their symbol_match_count
+            std::multimap<uint32_t, SymbolId> card_to_match_symbols;
+            for (SymbolId id : next_card_to_match)
+                card_to_match_symbols.insert(std::pair(symbol_match_count[id], id));
+
+            assert(card_to_match_symbols.size() == nSymbolsPerCard);
             
-            // Tried all symbols from next_card_to_match, but none worked
-            if (!success) {
-                // If cannot create any more cards starting with current symbol, mark symbol as invalid and restart 
+            // Go through symbols in increasing match_count order and check if they can be used for the card
+            bool found_matching_symbol = false;
+
+            for (auto pair : card_to_match_symbols) 
+            {
+                // Test card with symbol
+                SymbolId symbol = pair.second;
+                card.push_back(symbol);
+                if (checkCardAgainstDeck(card, deck.begin(), deck.end(), nullptr, true)) { 
+                    found_matching_symbol = true;
+                    symbol_match_count[symbol]++;
 #if DEBUG
-                printf("no match possible] -> Exhausted all options with start symbol %2x, marking as invalid\n", 
-                    base[next_base_symbol_idx]);
+                    printf("\t---- matched with symbol %u\n", symbol);
 #endif
-                base_symbol_valid[last_base_symbol_idx] = false;
-                isNewCardValid = false;
-                break;
+                    break;
+                }
+                // If card does not work: Remove symbol from card again
+                (void)card.pop_back();
             }
+
+            if (!found_matching_symbol) {
+#if DEBUG
+                printf("\tCould not find a matching symbol that leads to a valid deck\n");
+#endif
+                is_last_created_card_valid = false;
+
+            } else {
+            }
+
+
+
+/*
+            uint32_t min_val = *std::min_element(base_symbol_count.begin(), base_symbol_count.end()); 
+
+            uint32_t symbol_with_least_count = std::distance(base_symbol_count.begin(), min_iter);
+
+            card.push_back(symbol_with_least_count);
+
+            // Check card against entire deck (except the base card) 
+*/
         }
 
-        if (isNewCardValid) 
+        if (is_last_created_card_valid)
         {
             // Card is now matching with all previous cards; if card does not have all symbols yet, fill it up with new symbols
 #if DEBUG
             if (card.size() < nSymbolsPerCard)
-                printf("\t filling remaining symbols with new ones ...");
+                printf("\t filling remaining symbols with new ones ...\n");
 #endif
             // Fill remaining symbols with new ones
-            while (card.size() < nSymbolsPerCard)
-                    card.push_back(++highest_symbol); 
+            while (card.size() < nSymbolsPerCard) {
+                card.push_back(++highest_symbol); 
+                symbol_match_count.push_back(0); // Create new entry for new symbol in symbol_match_count
+            } 
 
             // Insert completed card into deck
             deck.push_back(card);
 #if DEBUG
             printf("\n=> New Card (No. %zu):", deck.size()); println(deck.back()); 
 #endif
-        }
+    }
     } 
 
     out_metrics->Num_Cards = (uint32_t)deck.size();
     out_metrics->Num_Symbols_per_Card = nSymbolsPerCard;
-    out_metrics->Num_Symbols = highest_symbol + 1;
+    out_metrics->Num_Symbols = (uint32_t)symbol_match_count.size(); 
 
     return deck;
 }

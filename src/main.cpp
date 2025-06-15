@@ -115,23 +115,22 @@ int main(int argc, char *argv[])
     }
 
     if (!output_file.empty()) {
-        std::ofstream file(output_file);
+        FILE* file = fopen(output_file.c_str(), "w");
 
-        if (file.is_open()) {
+        if (file != nullptr) {
+            fprintf(file, "Card deck with %u symbols per card, %u cards and %u symbols\n",
+                metrics.Num_Symbols_per_Card, metrics.Num_Cards, metrics.Num_Symbols);
+            fprintf(file, "---------------------------\n");
             for (uint32_t i = 0; i < deck.size(); i++) {
-                file << "Card No. " << i+1 << ":   ";
+                fprintf(file, "Card No. %2u:\t", i+1);
                 Card &card = deck[i];
                 for (SymbolId id : card) {
-
-                    if (id < symbols.size())
-                        file << symbols[id] << "\t"; 
-                    else
-                        file << "[" << id << "]\t";
+                    fprintf(file, "%*s [%02x]", 
+                        (int)(longest_symbol_len + 4), (id < symbols.size() ? symbols[id].c_str() : ""), id);
                 }
-                file << std::endl; 
+                fprintf(file, "\n");
             }
-
-            file.close();
+            fclose(file);
         }
 
 
